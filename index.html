@@ -180,7 +180,7 @@
 					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
 					INTERSECTED = intersects[ 0 ].object;
 				}
-				console.log(INTERSECTED);
+				console.log(INTERSECTED.name);
 				this.tl.to(INTERSECTED.scale, 1, {x: 2, ease: Expo.easeOut});
 				this.tl.to(INTERSECTED.scale, 1, {x: 1, ease: Expo.easeOut});
 			}
