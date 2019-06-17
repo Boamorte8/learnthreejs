@@ -57,12 +57,20 @@
 			controls.maxPolarAngle = Math.PI;
 			// controls.maxPolarAngle = Math.PI / 2;
 
+			// Grid
+			// var helper = new THREE.GridHelper( 1000, 40, 0x303030, 0x303030 );
+			// helper.position.y = - 75;
+			// scene.add( helper );
+
 			var geometry0 = new THREE.SphereGeometry(5, 25, 25);
 			var geometry1 = new THREE.SphereGeometry(2, 25, 25);
 			var geometry = new THREE.BoxGeometry(10, 10, 10);
 			var material = new THREE.MeshLambertMaterial({color: 0xffbb22});
 			var material0 = new THREE.MeshLambertMaterial({color: 0xdd8822});
 			var material1 = new THREE.MeshLambertMaterial({color: 0x224422});
+			var material2 = new THREE.MeshPhongMaterial( { color: 0x00ff00, specular: 0x444444, emissive: 0x000000, shininess: 10, opacity: 0.9, transparent: true } );
+			var material3 = new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x009900, shininess: 30, flatShading: true } );
+			var material4 = new THREE.MeshPhongMaterial( { color: 0x000000, specular: 0x444444, emissive: 0x00ff00, shininess: 10, opacity: 0.9, transparent: true } );
 
 
 			var mesh = new THREE.Mesh(geometry, material);
@@ -79,23 +87,32 @@
 
 			var mesh = new THREE.Mesh(geometry, material1);
 			mesh.position.set(1, 0, 20);
+			mesh.name = 'cubegreen';
 			scene.add(mesh);
 
-			var mesh5 = new THREE.Mesh(geometry, material);
+			var mesh5 = new THREE.Mesh(geometry, material3);
 			mesh5.position.set(-20, 0, 1);
+			mesh5.name = 'rotatecube';
 			scene.add(mesh5);
 
 			var mesh6 = new THREE.Mesh(geometry, material);
 			mesh6.position.set(1, 0, -20);
 			scene.add(mesh6);
 
-			var mesh7 = new THREE.Mesh(geometry1, material);
+			var mesh7 = new THREE.Mesh(geometry1, material4);
 			mesh7.position.set(1, 20, 10);
+			mesh7.name = 'moon1';
 			scene.add(mesh7);
 
 			var mesh8 = new THREE.Mesh(geometry0, material);
 			mesh8.position.set(1, 20, 1);
+			mesh8.name = 'planet';
 			scene.add(mesh8);
+
+			var mesh9 = new THREE.Mesh(geometry1, material2);
+			mesh9.position.set(3, 20, 20);
+			mesh9.name = 'moon2';
+			scene.add(mesh9);
 
 			// var light = new THREE.PointLight(0xFFFFFF, 1, 500);
 			// light.position.set(10, 0, 25);
@@ -126,6 +143,8 @@
 				mesh5.rotation.y += 0.01;
 				mesh7.position.x = 20 * Math.cos( r );
 				mesh7.position.z = 10 * Math.sin( r );
+				mesh9.position.x = 30 * Math.cos( r );
+				mesh9.position.z = 20 * Math.sin( r );
 			}, 10);
 
 		}
@@ -161,6 +180,7 @@
 					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
 					INTERSECTED = intersects[ 0 ].object;
 				}
+				console.log(INTERSECTED);
 				this.tl.to(INTERSECTED.scale, 1, {x: 2, ease: Expo.easeOut});
 				this.tl.to(INTERSECTED.scale, 1, {x: 1, ease: Expo.easeOut});
 			}
