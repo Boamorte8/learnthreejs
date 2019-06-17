@@ -12,57 +12,190 @@
 <body>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/104/three.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.2/TweenMax.min.js"></script>
+	<script src="https://unpkg.com/three@0.85.0/examples/js/controls/OrbitControls.js"></script>
+	<script src="js/WebGL.js"></script>
 
 	<script>
-		var scene = new THREE.Scene();
-		var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-		camera.position.z = 14;
-		// camera.position.y = 2;
-		var renderer = new THREE.WebGLRenderer({
-			antialias: true
-		});
+		if ( WEBGL.isWebGLAvailable() === false ) {
+			document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+		}
 
-		renderer.setClearColor("#e5e5e5");
-		renderer.setSize(window.innerWidth, window.innerHeight);
-		document.body.appendChild(renderer.domElement);
+		var container;
+		var camera, controls, scene, renderer, raycaster;
 
-		window.addEventListener('resize', () => {
+		var mouse = new THREE.Vector2(), INTERSECTED;
+		var radius = 100, theta = 0;
+
+		init();
+
+		animate();
+
+		function init() {
+			scene = new THREE.Scene();
+
+			camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+			camera.position.set(6, 3, 0);
+			// camera.position.z = 14;
+			// camera.position.y = 2;
+
+			raycaster = new THREE.Raycaster();
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setClearColor("#e5e5e5");
 			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			document.body.appendChild(renderer.domElement);
+
+			controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+			controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+			controls.dampingFactor = 0.25;
+			controls.screenSpacePanning = false;
+			controls.minDistance = 80;
+			controls.maxDistance = 500;
+			controls.maxPolarAngle = Math.PI;
+			// controls.maxPolarAngle = Math.PI / 2;
+
+			var geometry0 = new THREE.SphereGeometry(5, 25, 25);
+			var geometry1 = new THREE.SphereGeometry(2, 25, 25);
+			var geometry = new THREE.BoxGeometry(10, 10, 10);
+			var material = new THREE.MeshLambertMaterial({color: 0xffbb22});
+			var material0 = new THREE.MeshLambertMaterial({color: 0xdd8822});
+			var material1 = new THREE.MeshLambertMaterial({color: 0x224422});
+
+
+			var mesh = new THREE.Mesh(geometry, material);
+			// mesh.position.x = -2;
+			// mesh.position.y = -2;
+			// mesh.rotation.set(45, 45, 0);
+			// mesh.scale.set(1, 2, 1);
+			mesh.position.set(1, 0, 1);
+			scene.add(mesh);
+
+			var mesh = new THREE.Mesh(geometry, material0);
+			mesh.position.set(20, 0, 1);
+			scene.add(mesh);
+
+			var mesh = new THREE.Mesh(geometry, material1);
+			mesh.position.set(1, 0, 20);
+			scene.add(mesh);
+
+			var mesh5 = new THREE.Mesh(geometry, material);
+			mesh5.position.set(-20, 0, 1);
+			scene.add(mesh5);
+
+			var mesh6 = new THREE.Mesh(geometry, material);
+			mesh6.position.set(1, 0, -20);
+			scene.add(mesh6);
+
+			var mesh7 = new THREE.Mesh(geometry1, material);
+			mesh7.position.set(1, 20, 10);
+			scene.add(mesh7);
+
+			var mesh8 = new THREE.Mesh(geometry0, material);
+			mesh8.position.set(1, 20, 1);
+			scene.add(mesh8);
+
+			// var light = new THREE.PointLight(0xFFFFFF, 1, 500);
+			// light.position.set(10, 0, 25);
+			// scene.add(light);
+
+			var light = new THREE.DirectionalLight( 0x002288 );
+			light.position.set( -2, -1, -1 );
+			scene.add( light );
+
+			var light = new THREE.DirectionalLight( 0xffffff );
+			light.position.set( 1, 2, 1 );
+			scene.add( light );
+
+			var light = new THREE.AmbientLight( 0x222222 );
+			scene.add( light );
+
+			document.addEventListener( 'click', onDocumentClick, false );
+			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+			window.addEventListener('resize', onWindowResize, false);
+
+			this.tl = new TimelineMax().delay(.3);
+			this.tl.to(mesh6.rotation, 1, {x: 1, ease: Expo.easeOut});
+			// this.tl.to(this.mesh.scale, 1, {x: 2, ease: Expo.easeOut});
+
+			setInterval(() => {
+				var r = Date.now() * 0.0005;
+				mesh5.rotation.y += 0.01;
+				mesh7.position.x = 20 * Math.cos( r );
+				mesh7.position.z = 10 * Math.sin( r );
+			}, 10);
+
+		}
+
+		function onWindowResize() {
 			camera.aspect = window.innerWidth / window.innerHeight;
-
 			camera.updateProjectionMatrix();
-		});
 
-		// var geometry = new THREE.SphereGeometry(2, 25, 25);
-		var geometry = new THREE.BoxGeometry(2, 2, 2);
-		var material = new THREE.MeshLambertMaterial({color: 0xffbb22});
-		var mesh = new THREE.Mesh(geometry, material);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
 
-		// mesh.position.x = -2;
-		// mesh.position.y = -2;
-		// mesh.position.set(-2, -2, 0);
-		mesh.rotation.set(45, 45, 0);
-		// mesh.scale.set(1, 2, 1);
+		function onDocumentMouseMove(event) {
+			detectMouse();
+			paintMesh();
+		}
 
-		scene.add(mesh);
+		function onDocumentClick(event) {
+			detectMouse();
+			scaleMesh();
+		}
 
-		var light = new THREE.PointLight(0xFFFFFF, 1, 500);
-		light.position.set(10, 0, 25);
-		scene.add(light);
+		function detectMouse() {
+			event.preventDefault();
+			mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+			mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
+		}
 
-		var render = function() {
-			requestAnimationFrame(render);
+		function scaleMesh() {
+			var intersects = raycaster.intersectObjects( scene.children );
 
-			// mesh.rotation.x += 0.01;
+			if ( intersects.length > 0 ) {
+				if ( INTERSECTED != intersects[ 0 ].object ) {
+					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+					INTERSECTED = intersects[ 0 ].object;
+				}
+				this.tl.to(INTERSECTED.scale, 1, {x: 2, ease: Expo.easeOut});
+				this.tl.to(INTERSECTED.scale, 1, {x: 1, ease: Expo.easeOut});
+			}
+		}
+
+		function paintMesh() {
+			var intersects = raycaster.intersectObjects( scene.children );
+
+			if ( intersects.length > 0 ) {
+				if ( INTERSECTED != intersects[ 0 ].object ) {
+					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+					INTERSECTED = intersects[ 0 ].object;
+					INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+					INTERSECTED.material.emissive.setHex( 0xff0000 );
+				}
+			} else {
+				if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+				// this.tl.to(INTERSECTED.scale, 1, {x: 1, ease: Expo.easeOut});
+				INTERSECTED = null;
+			}
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+			controls.update();
+
+			render();
+		}
+
+		function render() {
+			raycaster.setFromCamera( mouse, camera );
 
 			renderer.render(scene, camera);
 		}
-
-		render();
-
-		this.tl = new TimelineMax().delay(.3);
-		// this.tl.to(this.mesh.rotation, 1, {x: 1, ease: Expo.easeOut});
-		// this.tl.to(this.mesh.scale, 1, {x: 2, ease: Expo.easeOut});
 
 	</script>
 </body>
